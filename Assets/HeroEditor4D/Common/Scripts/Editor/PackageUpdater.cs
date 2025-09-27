@@ -11,7 +11,7 @@ namespace Assets.HeroEditor4D.Common.Scripts.Editor
     internal static class PackageUpdater
     {
         private const string PackageId = "147364";
-        private const string CurrentVersion = "7.5";
+        private const string CurrentVersion = "7.6";
 
         private static readonly string PrefsKeyTime = $"PackageUpdater.Time.{PackageId}";
         private static readonly string PrefsKeySkip = $"PackageUpdater.Skip.{PackageId}";

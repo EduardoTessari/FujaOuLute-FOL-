@@ -7,10 +7,9 @@ public class PLayerControler : MonoBehaviour
     private Vector2 _moveInput;
     private Rigidbody2D _rb;
     private Animator _animator;
-
-
-
     private PlayerMoves _playerMoves;
+
+    
 
     private void Awake()
     {
@@ -76,4 +75,6 @@ public class PLayerControler : MonoBehaviour
             transform.localScale = new Vector2(1, 1);
         }
     }
+
+    public Vector2 MoveInput { get { return _moveInput; } }
 }
