@@ -83,7 +83,7 @@ public class CollectItem : MonoBehaviour
 
         progressBar.gameObject.SetActive(false);
         skillCheckGroup.SetActive(false);
-        Debug.Log("Item Collected!");
+        _playerInRange.GetComponent<Inventory>().AddWood(1);
         //Destroy(gameObject);
     }
 
