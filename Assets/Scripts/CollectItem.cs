@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic; // Precisamos disso para Dicionários e Listas!
 
 public class CollectItem : MonoBehaviour
 {
@@ -26,10 +27,21 @@ public class CollectItem : MonoBehaviour
 
     public SucessZone successZone;
 
+    [Header ("Audios Settings")]
+    [SerializeField] AudioSource _treeAudioSource;
+    [SerializeField] AudioClip _collectAudioClip;
+    [SerializeField] AudioClip _successAudioClip;
+    [SerializeField] AudioClip _FailAudioClip;
+
+    [Header("Item Drop Settings")]
+    public ItemList itemToGive; // <-- AQUI! Crie este campo.
+    public int amountToGive = 1; // Quantidade que ela dá
+
+
 
     private void Awake()
     {
-        //successZone = GetComponent<SucessZone>();
+        _treeAudioSource = GetComponent<AudioSource>();
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -63,6 +75,9 @@ public class CollectItem : MonoBehaviour
     {
         progressBar.gameObject.SetActive(true);
         progressBar.value = 0;
+        _treeAudioSource.clip = _collectAudioClip;
+        _treeAudioSource.loop = true;
+        _treeAudioSource.Play();
         StartCoroutine(SkillCheckRoutine());
         _elapsedTime = 0f;
 
@@ -72,6 +87,8 @@ public class CollectItem : MonoBehaviour
             {
                 progressBar.gameObject.SetActive(false);
                 skillCheckGroup.SetActive(false);
+                _treeAudioSource.Stop();
+                _treeAudioSource.loop = false;
                 StopCoroutine(SkillCheckRoutine()); // Importante: parar a outra coroutine também!
                 _canCollect = true;
                 yield break;
@@ -81,9 +98,11 @@ public class CollectItem : MonoBehaviour
             yield return null;
         }
 
+        _treeAudioSource.Stop();
+        _treeAudioSource.loop = false;
         progressBar.gameObject.SetActive(false);
         skillCheckGroup.SetActive(false);
-        _playerInRange.GetComponent<Inventory>().AddWood(1);
+        _playerInRange.GetComponent<Inventory>().AddItem(itemToGive, amountToGive);
         //Destroy(gameObject);
     }
 
@@ -114,11 +133,13 @@ public class CollectItem : MonoBehaviour
                 // A NOVA LÓGICA DE ACERTO, MUITO MAIS SIMPLES!
                 if (successZone.isBarInside)
                 {
+                    _treeAudioSource.PlayOneShot(_successAudioClip);
                     Debug.Log("SKILL CHECK SUCESSO! (Com Collider)");
                     _elapsedTime += bonusTime;
                 }
                 else
                 {
+                    _treeAudioSource.PlayOneShot(_FailAudioClip);
                     Debug.Log("SKILL CHECK FALHA! (Com Collider)");
                 }
             }
