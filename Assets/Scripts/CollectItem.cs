@@ -1,14 +1,17 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections.Generic; // Precisamos disso para Dicionários e Listas!
+using System.Collections.Generic;
+using Assets.HeroEditor4D.Common.Scripts.Common;
+using System.Security; // Precisamos disso para Dicionários e Listas!
 
 public class CollectItem : MonoBehaviour
 {
     [Header("Collection Settings")]
-    [SerializeField] float _collectTime = 10f; 
+    [SerializeField] float _collectTime = 10f;
 
     [Header("UI References")]
+    [SerializeField] private GameObject _btnToPress; //variavel para a ajuda visual do botao de coleta
     public Slider progressBar;
     public Slider skillCheckBar;
     public GameObject skillCheckGroup;
@@ -49,6 +52,7 @@ public class CollectItem : MonoBehaviour
         if (collision.CompareTag("Player"))
         {
             _playerInRange = collision.GetComponent<PLayerControler>();
+            _btnToPress.SetActive(true);
             _canCollect = true;
         }
     }
@@ -58,6 +62,7 @@ public class CollectItem : MonoBehaviour
         if (_playerInRange != null && _canCollect && Input.GetKeyDown(KeyCode.E))
         {
             _canCollect = false;
+            _btnToPress.SetActive(false);
             StartCoroutine(CollectTime());
         }
     }
@@ -67,6 +72,7 @@ public class CollectItem : MonoBehaviour
         if (collision.CompareTag("Player"))
         {
             _playerInRange = null;
+            _btnToPress.SetActive(false);
             _canCollect = false;
         }
     }
@@ -100,6 +106,7 @@ public class CollectItem : MonoBehaviour
 
         _treeAudioSource.Stop();
         _treeAudioSource.loop = false;
+        _treeAudioSource.PlayOneShot(_successAudioClip);
         progressBar.gameObject.SetActive(false);
         skillCheckGroup.SetActive(false);
         _playerInRange.GetComponent<Inventory>().AddItem(itemToGive, amountToGive);

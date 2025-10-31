@@ -47,6 +47,12 @@ public class BoatProgress : MonoBehaviour
         CheckWinCondition();
     }
 
+    // Uma função pública para obter o progresso atual (útil para UI)
+    public Dictionary<ItemList, int> GetCollectedItems()
+    {
+        return itemsCollected;
+    }
+
     /**
      * Uma função privada que checa se a "lista de compras" bate com o "carrinho".
      */
@@ -73,6 +79,5 @@ public class BoatProgress : MonoBehaviour
         // Se o loop terminou e não saímos em nenhum "return"…
         // ...significa que temos TODOS os itens na quantidade certa!
         Debug.LogWarning("BARCO CONSTRUÍDO! TODOS OS RECURSOS COLETADOS! VENCEU!");
-        // Time.timeScale = 0f; // Pausa o jogo
     }
 }

@@ -9,9 +9,14 @@ public class DockUI : MonoBehaviour
     [Header("Conexões da UI")]
     public TMP_Dropdown itemDropdown; // Arraste seu Dropdown aqui
     public TMP_InputField amountInput; // Arraste seu InputField aqui
+    public TMP_Text goalList; // Arraste seu Text aqui para mostrar a lista de objetivos
     public Button confirmButton;
     public Button cancelButton;
 
+    [Header("Audios")]
+    [SerializeField] private AudioSource _dockAudioSource;
+    [SerializeField] private AudioClip _successAudioClip;
+    [SerializeField] private AudioClip _errorAudioClip;
     // "Memória" - Para saber com quem estamos falando
     private Inventory _playerInventory;
     private BoatProgress _boatProgress;
@@ -24,6 +29,8 @@ public class DockUI : MonoBehaviour
      */
     private void Start()
     {
+        _dockAudioSource = GetComponent<AudioSource>();
+        
         // Conecta as funções aos botões
         confirmButton.onClick.AddListener(OnConfirm);
         cancelButton.onClick.AddListener(OnCancel);
@@ -43,10 +50,10 @@ public class DockUI : MonoBehaviour
 
         // 2. Mostra a janela e pausa o jogo
         gameObject.SetActive(true);
-        Time.timeScale = 0f; // Pausa o jogo
 
         // 3. A MÁGICA: Popula o Dropdown com o inventário atual
         PopulateDropdown();
+        UpdateProgressDisplay();
     }
 
     /**
@@ -78,6 +85,37 @@ public class DockUI : MonoBehaviour
         itemDropdown.AddOptions(options);
     }
 
+    // Esta função vai ler a receita e o progresso e escrever no Text
+    private void UpdateProgressDisplay()
+    {
+        // 1. Pega a "lista de compras" (a receita) do Cérebro
+        List<ItemRequirement> recipe = _boatProgress.recipe;
+
+        // 2. Pega o "carrinho" (o que já coletamos)
+        Dictionary<ItemList, int> collected = _boatProgress.GetCollectedItems();
+
+        // 3. Constrói o texto (como você sugeriu)
+        string progressString = "META DO BARCO:\n"; // \n = quebra de linha
+
+        // 4. Loop "Para Cada" item na receita...
+        foreach (ItemRequirement req in recipe)
+        {
+            int currentAmount = 0; // Começa em 0
+
+            // 5. Checa se já temos algo desse item no "carrinho"
+            if (collected.ContainsKey(req.item))
+            {
+                currentAmount = collected[req.item]; // Pega a quantidade
+            }
+
+            // 6. A "Interpolação de String" que você mencionou!
+            progressString += $"{req.item.ToString()}: {currentAmount} / {req.amountNeeded}\n";
+        }
+
+        // 7. Coloca o texto final na UI
+        goalList.text = progressString;
+    }
+
     /**
      * Chamado quando o botão "Confirmar" é clicado
      */
@@ -96,7 +134,7 @@ public class DockUI : MonoBehaviour
         if (!int.TryParse(amountInput.text, out amountToDeposit))
         {
             Debug.Log("Quantidade inválida.");
-            // Futuramente: Tocar som de erro
+            _dockAudioSource.PlayOneShot(_errorAudioClip);
             return;
         }
 
@@ -104,7 +142,7 @@ public class DockUI : MonoBehaviour
         if (amountToDeposit <= 0)
         {
             Debug.Log("Quantidade inválida. Deve ser um número maior que zero.");
-            // Tocar som de erro
+            _dockAudioSource.PlayOneShot(_errorAudioClip);
             return; // Para a execução aqui
         }
 
@@ -117,14 +155,16 @@ public class DockUI : MonoBehaviour
         {
             // Deu certo! Agora podemos entregar ao barco
             _boatProgress.AddItemToBoat(selectedItem, amountToDeposit);
-            // Futuramente: Tocar o "plin" de sucesso aqui
-            CloseWindow();
+            _dockAudioSource.PlayOneShot(_successAudioClip);
+
+            PopulateDropdown(); // Atualiza o Dropdown (ex: "Wood (15)")
+            UpdateProgressDisplay(); // Atualiza a Meta (ex: "Madeira: 15 / 50")
         }
         else
         {
             // O RemoveItem falhou (jogador tentou depositar mais do que tinha)
             Debug.Log("Falha no depósito. Quantidade insuficiente.");
-            // Futuramente: Tocar som de erro
+            _dockAudioSource.PlayOneShot(_errorAudioClip);
         }
     }
 
@@ -141,8 +181,6 @@ public class DockUI : MonoBehaviour
      */
     private void CloseWindow()
     {
-        // Despausa o jogo
-        Time.timeScale = 1f;
 
         // Limpa as referências
         _playerInventory = null;

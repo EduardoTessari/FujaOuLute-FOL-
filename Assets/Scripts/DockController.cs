@@ -12,6 +12,7 @@ public class DockController : MonoBehaviour
     // Variáveis privadas
     private Inventory _playerInventory;
     private bool _canDeposit = false;
+    [SerializeField] private GameObject _btnToPress; //variavel para a ajuda visual do botao de coleta
 
     // --- OnTriggerEnter e Exit estão perfeitos, não mude nada ---
 
@@ -21,6 +22,12 @@ public class DockController : MonoBehaviour
         {
             // Pega o INVENTÁRIO em vez do CONTROLE
             _playerInventory = collision.GetComponent<Inventory>();
+
+            if (_btnToPress != null)
+            {
+                _btnToPress.SetActive(true);
+            }
+            
             _canDeposit = true;
         }
     }
@@ -30,6 +37,12 @@ public class DockController : MonoBehaviour
         if (collision.CompareTag("Player"))
         {
             _playerInventory = null;
+
+            if (_btnToPress != null)
+            {
+                _btnToPress.SetActive(false); // Desativa o botao de auxilio ao abrir a janela
+            }
+
             _canDeposit = false;
         }
     }
@@ -41,18 +54,15 @@ public class DockController : MonoBehaviour
         // Se o jogador está na área e aperta a tecla
         if (_playerInventory != null && _canDeposit && Input.GetKeyDown(KeyCode.E))
         {
-            // 3. Checamos se o inventário NÃO está vazio
-            if (_playerInventory.GetCurrentInventory().Count > 0)
+            // 3. A MÁGICA! A Doca "terceiriza" o trabalho.
+            // Ela chama a função OpenWindow e entrega as "ferramentas"
+            depositPanel.OpenWindow(_playerInventory, boatProgressManager);
+
+            if (_btnToPress != null)
             {
-                // 4. A MÁGICA! A Doca "terceiriza" o trabalho.
-                // Ela chama a função OpenWindow e entrega as "ferramentas"
-                depositPanel.OpenWindow(_playerInventory, boatProgressManager);
+                _btnToPress.SetActive(false); // Desativa o botao de auxilio ao abrir a janela
             }
-            else
-            {
-                // Opcional: Tocar um som de "erro" (inventário vazio)
-                Debug.Log("Inventário vazio!");
-            }
+                
         }
     }
 }
