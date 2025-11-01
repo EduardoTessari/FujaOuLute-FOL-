@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic; // Importante! Precisamos disso para o Dicionário
+using TMPro; // Para manipular textos na UI
 
 public class Inventory : MonoBehaviour
 {
@@ -8,6 +9,7 @@ public class Inventory : MonoBehaviour
     // O [SerializeField] nos deixa ver no Inspector, o que é ótimo para debug.
     [SerializeField]
     private Dictionary<ItemList, int> items = new Dictionary<ItemList, int>();
+    [SerializeField]private TMP_Text inventoryText; // Referência ao texto da UI para mostrar o inventário
 
     // --- FUNÇÕES PÚBLICAS ATUALIZADAS ---
 
@@ -28,6 +30,7 @@ public class Inventory : MonoBehaviour
         {
             items.Add(item, amount);
         }
+        UpdateInventoryDisplay();
         Debug.Log($"Pegou {amount} de {item}! Total agora: {items[item]}");
     }
 
@@ -41,6 +44,7 @@ public class Inventory : MonoBehaviour
         if (items.ContainsKey(item) && items[item] >= amount)
         {
             items[item] -= amount;
+            UpdateInventoryDisplay();
             Debug.Log($"Removeu {amount} de {item}. Sobraram {items[item]}");
 
             // Se zerar, podemos remover o item da lista (opcional, mas limpo)
@@ -73,5 +77,15 @@ public class Inventory : MonoBehaviour
     public Dictionary<ItemList, int> GetCurrentInventory()
     {
         return items;
+    }
+
+    private void UpdateInventoryDisplay()
+    {
+        string text = "INVENTÁRIO:\n";
+        foreach (KeyValuePair<ItemList, int> itemPair in items)
+        {
+            text += $"{itemPair.Key.ToString()}: {itemPair.Value}\n";
+        }
+        inventoryText.text = text;
     }
 }

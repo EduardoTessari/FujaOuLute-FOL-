@@ -110,7 +110,7 @@ public class CollectItem : MonoBehaviour
         progressBar.gameObject.SetActive(false);
         skillCheckGroup.SetActive(false);
         _playerInRange.GetComponent<Inventory>().AddItem(itemToGive, amountToGive);
-        //Destroy(gameObject);
+        Destroy(gameObject);
     }
 
     IEnumerator SkillCheckRoutine()

@@ -10,6 +10,7 @@ public class DockUI : MonoBehaviour
     public TMP_Dropdown itemDropdown; // Arraste seu Dropdown aqui
     public TMP_InputField amountInput; // Arraste seu InputField aqui
     public TMP_Text goalList; // Arraste seu Text aqui para mostrar a lista de objetivos
+ 
     public Button confirmButton;
     public Button cancelButton;
 
