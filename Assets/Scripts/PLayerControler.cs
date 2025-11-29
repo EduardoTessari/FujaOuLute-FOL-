@@ -3,13 +3,16 @@ using UnityEngine;
 public class PLayerControler : MonoBehaviour
 {
     [SerializeField] private float speed = 4.0f;
-    [SerializeField] AudioSource _audioSource;
     private Vector2 _moveInput;
     private Rigidbody2D _rb;
     private Animator _animator;
     private PlayerMoves _playerMoves;
 
-    
+    [Header("Audio Settings")]
+    [SerializeField] private float stepInterval = 0.4f; // Ajuste isso no Inspector! (ex: 0.4 ou 0.5)
+    private float _stepTimer;
+
+
 
     private void Awake()
     {
@@ -42,24 +45,35 @@ public class PLayerControler : MonoBehaviour
 
     private void Move()
     {
+        // 1. Aplica o movimento físico
         _rb.MovePosition(_rb.position + _moveInput * speed * Time.fixedDeltaTime);
-        
+
+        // 2. Verifica se está se movendo para Animação e Som
         if (_moveInput != Vector2.zero)
         {
             _animator.SetInteger("State", 1);
-            if (!_audioSource.isPlaying)
+
+            // --- LÓGICA DO TIMER DE PASSOS ---
+            _stepTimer += Time.deltaTime; // O relógio conta...
+
+            if (_stepTimer >= stepInterval)
             {
-                _audioSource.Play();
+                // Hora do passo! Chama o Maestro.
+                AudioManager.instance.PlayFootstep();
+
+                // Zera o relógio para contar o próximo passo
+                _stepTimer = 0f;
             }
+            // ---------------------------------
         }
         else
         {
             _animator.SetInteger("State", 0);
-            if (_audioSource.isPlaying)
-            {
-                _audioSource.Stop();
-            }
-            
+
+            // Reset Inteligente:
+            // Deixamos o timer "cheio" para que, assim que você voltar a andar,
+            // o primeiro passo saia imediatamente (sem delay).
+            _stepTimer = stepInterval;
         }
 
     }

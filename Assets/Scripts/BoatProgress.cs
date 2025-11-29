@@ -99,4 +99,31 @@ public class BoatProgress : MonoBehaviour
         Debug.LogWarning("BARCO CONSTRUÍDO! TODOS OS RECURSOS COLETADOS! VENCEU!");
         
     }
+
+    public int GetAmountNeeded(ItemList item)
+    {
+        int needed = 0;
+        int collected = 0;
+
+        // 1. Encontra o total necessário na "receita"
+        foreach (ItemRequirement req in recipe)
+        {
+            if (req.item == item)
+            {
+                needed = req.amountNeeded;
+                break; // Achamos o item, podemos parar o loop
+            }
+        }
+
+        // 2. Encontra o total que já coletamos
+        // (Precisamos da sua função "getter" aqui!)
+        if (itemsCollected.ContainsKey(item))
+        {
+            collected = itemsCollected[item];
+        }
+
+        // 3. Retorna a diferença (quanto falta)
+        // O Mathf.Max garante que nunca vamos retornar um número negativo
+        return Mathf.Max(0, needed - collected);
+    }
 }

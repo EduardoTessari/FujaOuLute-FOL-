@@ -1,58 +1,64 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.UI;
-using System.Collections.Generic;
-using Assets.HeroEditor4D.Common.Scripts.Common;
-using System.Security; // Precisamos disso para Dicionários e Listas!
 
 public class CollectItem : MonoBehaviour
 {
-    [Header("Collection Settings")]
+    [Header("Configuração da Coleta")]
     [SerializeField] float _collectTime = 10f;
+    [SerializeField] float _bonusTime = 6f;
 
-    [Header("UI References")]
-    [SerializeField] private GameObject _btnToPress; //variavel para a ajuda visual do botao de coleta
-    public Slider progressBar;
-    public Slider skillCheckBar;
-    public GameObject skillCheckGroup;
-    public Image successZoneImage;
+    [Header("Configuração do Item")]
+    public ItemList itemToGive;
+    public int amountToGive = 1;
 
-    [Header("Skill Check Settings")]
-    public KeyCode skillCheckKey = KeyCode.F;
-    public float skillCheckDuration = 10f;
-    public float skillCheckSpeed = 0.5f; // <-- NOSSA NOVA VARIÁVEL DE VELOCIDADE
-    public float bonusTime = 6f;
 
     // Variáveis Privadas
     private bool _canCollect = false;
     private PLayerControler _playerInRange = null;
+    private Coroutine _collectCoroutine;
+
+    // --- CORREÇÃO DO BUG CS0103 ---
+    // Promovemos o _elapsedTime para ser uma variável da classe
     private float _elapsedTime;
-
-    public SucessZone successZone;
-
-    [Header ("Audios Settings")]
-    [SerializeField] AudioSource _treeAudioSource;
-    [SerializeField] AudioClip _collectAudioClip;
-    [SerializeField] AudioClip _successAudioClip;
-    [SerializeField] AudioClip _FailAudioClip;
-
-    [Header("Item Drop Settings")]
-    public ItemList itemToGive; // <-- AQUI! Crie este campo.
-    public int amountToGive = 1; // Quantidade que ela dá
-
-
+    // ----------------------------
 
     private void Awake()
     {
-        _treeAudioSource = GetComponent<AudioSource>();
     }
+
+    // --- CORREÇÃO DE LÓGICA NO TRIGGER EXIT ---
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if (collision.CompareTag("Player"))
+        {
+            _playerInRange = null;
+            UIManager.instance.ShowInteractPrompt(false);
+            _canCollect = false;
+
+            if (_collectCoroutine != null)
+            {
+                StopCoroutine(_collectCoroutine);
+                UIManager.instance.ShowProgressBar(false);
+
+                // --- CORREÇÃO DO BUG DE ARQUITETURA ---
+                // O "Chefe" (CollectItem) não deve desligar a UI
+                // UIManager.instance.skillCheckGroup.SetActive(false); // DELETADO
+                // Em vez disso, ele AVISA o UIManager
+                UIManager.instance.HideSkillCheckUI();
+                // ------------------------------------
+            }
+        }
+    }
+    // --- FIM DA CORREÇÃO ---
+
+    // (OnTriggerEnter e Update continuam iguais)
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Player"))
         {
             _playerInRange = collision.GetComponent<PLayerControler>();
-            _btnToPress.SetActive(true);
+            UIManager.instance.ShowInteractPrompt(true);
             _canCollect = true;
         }
     }
@@ -62,101 +68,59 @@ public class CollectItem : MonoBehaviour
         if (_playerInRange != null && _canCollect && Input.GetKeyDown(KeyCode.E))
         {
             _canCollect = false;
-            _btnToPress.SetActive(false);
-            StartCoroutine(CollectTime());
-        }
-    }
-
-    private void OnTriggerExit2D(Collider2D collision)
-    {
-        if (collision.CompareTag("Player"))
-        {
-            _playerInRange = null;
-            _btnToPress.SetActive(false);
-            _canCollect = false;
+            UIManager.instance.ShowInteractPrompt(false);
+            _collectCoroutine = StartCoroutine(CollectTime());
         }
     }
 
     IEnumerator CollectTime()
     {
-        progressBar.gameObject.SetActive(true);
-        progressBar.value = 0;
-        _treeAudioSource.clip = _collectAudioClip;
-        _treeAudioSource.loop = true;
-        _treeAudioSource.Play();
-        StartCoroutine(SkillCheckRoutine());
+        UIManager.instance.ShowProgressBar(true);
         _elapsedTime = 0f;
+
+        AudioManager.instance.PlayCollectingLoop(itemToGive);
+
+        Coroutine skillCheckCoroutine = StartCoroutine(UIManager.instance.DoSkillCheckProcess(this));
 
         while (_elapsedTime < _collectTime)
         {
             if (_playerInRange != null && _playerInRange.MoveInput != Vector2.zero)
             {
-                progressBar.gameObject.SetActive(false);
-                skillCheckGroup.SetActive(false);
-                _treeAudioSource.Stop();
-                _treeAudioSource.loop = false;
-                StopCoroutine(SkillCheckRoutine()); // Importante: parar a outra coroutine também!
+                // Cancelamento por movimento
+                UIManager.instance.ShowProgressBar(false);
+                StopCoroutine(skillCheckCoroutine);
+
+                // --- CORREÇÃO DO BUG DE ARQUITETURA ---
+                UIManager.instance.HideSkillCheckUI();
+                // ------------------------------------
+
+                AudioManager.instance.StopCollectingLoop();
                 _canCollect = true;
+                _collectCoroutine = null;
                 yield break;
             }
+
             _elapsedTime += Time.deltaTime;
-            progressBar.value = Mathf.Clamp01(_elapsedTime / _collectTime);
+            UIManager.instance.UpdateProgressBar(_elapsedTime / _collectTime);
             yield return null;
         }
 
-        _treeAudioSource.Stop();
-        _treeAudioSource.loop = false;
-        _treeAudioSource.PlayOneShot(_successAudioClip);
-        progressBar.gameObject.SetActive(false);
-        skillCheckGroup.SetActive(false);
+        // SUCESSO!
+        AudioManager.instance.PlayDepositSound(true);
+        AudioManager.instance.StopCollectingLoop();
+
+        StopCoroutine(skillCheckCoroutine);
+        UIManager.instance.ShowProgressBar(false);
+        UIManager.instance.HideSkillCheckUI(); // Garante que a UI suma
+
         _playerInRange.GetComponent<Inventory>().AddItem(itemToGive, amountToGive);
         Destroy(gameObject);
+        _collectCoroutine = null;
     }
 
-    IEnumerator SkillCheckRoutine()
+    // Esta função agora funciona, pois _elapsedTime é da classe!
+    public void ApplySkillCheckBonus()
     {
-        Debug.Log("Skill check started!");
-        skillCheckGroup.SetActive(true);
-
-        float timer = 0f;                   // Cronômetro para a DURAÇÃO total do skill check
-        float oscillationTimer = 0f;        // Cronômetro para a OSCILAÇÃO da barra
-        bool skillCheckUsed = false;
-
-        while (timer < skillCheckDuration && !skillCheckUsed)
-        {
-            //Debug.Log($"Skill Check está VIVA! Timer: {timer}");
-            // 1. O timer da oscilação continua crescendo para alimentar a onda
-            oscillationTimer += Time.deltaTime;
-
-            // 2. A matemática final usando Cosseno para uma curva suave de 0 a 1 e de volta a 0
-            float oscillation = (-Mathf.Cos(oscillationTimer * skillCheckSpeed) + 1f) / 2f;
-            skillCheckBar.value = oscillation;
-
-            // 3. Checagem do input do jogador
-            if (Input.GetKeyDown(skillCheckKey))
-            {
-                skillCheckUsed = true;
-
-                // A NOVA LÓGICA DE ACERTO, MUITO MAIS SIMPLES!
-                if (successZone.isBarInside)
-                {
-                    _treeAudioSource.PlayOneShot(_successAudioClip);
-                    Debug.Log("SKILL CHECK SUCESSO! (Com Collider)");
-                    _elapsedTime += bonusTime;
-                }
-                else
-                {
-                    _treeAudioSource.PlayOneShot(_FailAudioClip);
-                    Debug.Log("SKILL CHECK FALHA! (Com Collider)");
-                }
-            }
-
-            // 4. O timer principal continua contando para encerrar a rotina no tempo certo
-            timer += Time.deltaTime;
-            yield return null;
-        }
-
-        Debug.Log("Skill check finished.");
-        skillCheckGroup.SetActive(false); // Garante que a UI suma no final
+        _elapsedTime += _bonusTime;
     }
 }

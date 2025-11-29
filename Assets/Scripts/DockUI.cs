@@ -1,8 +1,7 @@
+using System.Collections.Generic; // Para o Dicionário!
+using TMPro; // Para Dropdown e InputField (assumindo que você usa TextMeshPro)
 using UnityEngine;
 using UnityEngine.UI; // Para Slider, Button
-using TMPro; // Para Dropdown e InputField (assumindo que você usa TextMeshPro)
-using System.Collections.Generic; // Para o Dicionário!
-using System.Linq; // Para facilitar a leitura do Dicionário
 
 public class DockUI : MonoBehaviour
 {
@@ -10,14 +9,10 @@ public class DockUI : MonoBehaviour
     public TMP_Dropdown itemDropdown; // Arraste seu Dropdown aqui
     public TMP_InputField amountInput; // Arraste seu InputField aqui
     public TMP_Text goalList; // Arraste seu Text aqui para mostrar a lista de objetivos
- 
+
     public Button confirmButton;
     public Button cancelButton;
 
-    [Header("Audios")]
-    [SerializeField] private AudioSource _dockAudioSource;
-    [SerializeField] private AudioClip _successAudioClip;
-    [SerializeField] private AudioClip _errorAudioClip;
     // "Memória" - Para saber com quem estamos falando
     private Inventory _playerInventory;
     private BoatProgress _boatProgress;
@@ -30,8 +25,7 @@ public class DockUI : MonoBehaviour
      */
     private void Start()
     {
-        _dockAudioSource = GetComponent<AudioSource>();
-        
+
         // Conecta as funções aos botões
         confirmButton.onClick.AddListener(OnConfirm);
         cancelButton.onClick.AddListener(OnCancel);
@@ -62,29 +56,66 @@ public class DockUI : MonoBehaviour
      */
     private void PopulateDropdown()
     {
-        // 1. Limpa o dropdown e nossa lista de memória
+        // 1. Limpa tudo da última vez que foi aberto (como antes)
         itemDropdown.ClearOptions();
         _itemsInDropdown.Clear();
 
-        // 2. Pega o inventário ATUAL do jogador
-        Dictionary<ItemList, int> inventory = _playerInventory.GetCurrentInventory();
+        // --- A CORREÇÃO ESTÁ AQUI ---
 
-        // 3. Cria a lista de "opções" para o dropdown
+        // 2. Pega a "lista de compras" (A RECEITA) do Cérebro
+        List<ItemRequirement> recipe = _boatProgress.recipe;
+
+        // 3. Cria a lista de opções de TEXTO para a UI
         List<string> options = new List<string>();
 
-        // 4. Loop Mágico: Passa por cada item no inventário
-        foreach (KeyValuePair<ItemList, int> itemPair in inventory)
+        // 4. O LOOP MÁGICO (AGORA LENDO A RECEITA)
+        // Em vez de ler o inventário, vamos ler a RECEITA
+        foreach (ItemRequirement req in recipe)
         {
-            // Pega o nome do item (ex: "Wood") e a quantidade (ex: 20)
-            string optionText = $"{itemPair.Key.ToString()} ({itemPair.Value})";
+            // 5. CHECAGEM: O jogador TEM este item da receita no inventário?
+            // (Usamos a função que já existe no Inventory.cs!)
+            int amountPlayerHas = _playerInventory.GetItemCount(req.item);
 
-            options.Add(optionText); // Adiciona "Wood (20)" na lista
-            _itemsInDropdown.Add(itemPair.Key); // Guarda o "ItemType.Wood" na memória
+            // 6. O FILTRO!
+            // Só adicionamos ao dropdown se o jogador tiver pelo menos 1
+            if (amountPlayerHas > 0)
+            {
+                // Cria o texto: "Wood (20)"
+                string optionText = $"{req.item.ToString()} ({amountPlayerHas})";
+                options.Add(optionText);
+
+                // E guardamos na nossa "lista secreta" para o OnConfirm
+                _itemsInDropdown.Add(req.item);
+            }
         }
 
-        // 5. Alimenta o dropdown com as opções que encontramos
+        // --- FIM DA CORREÇÃO ---
+
+        // 7. ALIMENTA O DROPDOWN (agora 100% filtrado)
         itemDropdown.AddOptions(options);
+
+        // 8. LÓGICA DE SEGURANÇA (Se o jogador não tiver NENHUM item da receita)
+        if (options.Count == 0)
+        {
+            // Mostra uma mensagem de "vazio"
+            options.Add("Você não tem os itens da receita...");
+            itemDropdown.ClearOptions(); // Limpa de novo (só por garantia)
+            itemDropdown.AddOptions(options);
+
+            // Desativa a interação para o jogador não tentar depositar "nada"
+            itemDropdown.interactable = false;
+            amountInput.interactable = false;
+            confirmButton.interactable = false;
+        }
+        else
+        {
+            // Se temos itens, garante que tudo está interativo
+            itemDropdown.interactable = true;
+            amountInput.interactable = true;
+            confirmButton.interactable = true;
+        }
     }
+
 
     // Esta função vai ler a receita e o progresso e escrever no Text
     private void UpdateProgressDisplay()
@@ -122,50 +153,59 @@ public class DockUI : MonoBehaviour
      */
     private void OnConfirm()
     {
-        // --- 1. QUAL ITEM FOI ESCOLHIDO? ---
-        // Pega o índice do item (ex: 0, 1, 2...) que está selecionado no dropdown
+        // 1. Pega o Item
         int selectedIndex = itemDropdown.value;
-        // Usa esse índice para pegar o ItemType correspondente da nossa lista de memória
         ItemList selectedItem = _itemsInDropdown[selectedIndex];
 
-        // --- 2. QUAL QUANTIDADE FOI DIGITADA? ---
-        int amountToDeposit;
-        // Tenta converter o texto do input para um número.
-        // Se falhar (ex: texto vazio), a Checagem 1 falha.
-        if (!int.TryParse(amountInput.text, out amountToDeposit))
+        // 2. Pega a Quantidade que o Jogador QUER dar
+        int amountPlayerWantsToGive; // (Mudei o nome para ficar super claro)
+        if (!int.TryParse(amountInput.text, out amountPlayerWantsToGive) || amountPlayerWantsToGive <= 0)
         {
-            Debug.Log("Quantidade inválida.");
-            _dockAudioSource.PlayOneShot(_errorAudioClip);
+            Debug.Log("Quantidade inválida. Deve ser um número maior que zero.");
+            AudioManager.instance.PlayDepositSound(false);
             return;
         }
 
-        // Precisamos checar se o número é POSITIVO ANTES de fazer qualquer coisa.
-        if (amountToDeposit <= 0)
+        // 3. Pergunta ao Cérebro quanto ele PRECISA
+        int amountBoatStillNeeds = _boatProgress.GetAmountNeeded(selectedItem);
+        if (amountBoatStillNeeds == 0)
         {
-            Debug.Log("Quantidade inválida. Deve ser um número maior que zero.");
-            _dockAudioSource.PlayOneShot(_errorAudioClip);
-            return; // Para a execução aqui
+            Debug.Log("O barco não precisa mais deste item!");
+            AudioManager.instance.PlayDepositSound(false);
+            return;
         }
 
-        // --- 3. A CHECAGEM DE LÓGICA ---
-        // Checagem 2 (Positivo?) e 3 (O jogador TEM isso?)
-        // Nós já fizemos a função RemoveItem ser inteligente, então só precisamos chamá-la!
-        bool success = _playerInventory.RemoveItem(selectedItem, amountToDeposit);
+        // 4. A LÓGICA DO "MAGIC CAMPUS" (A Correção)
+        // Começamos com o que o jogador quer dar
+        int amountToActuallyDeposit = amountPlayerWantsToGive;
+
+        // E limitamos ao que o barco precisa
+        if (amountToActuallyDeposit > amountBoatStillNeeds)
+        {
+            amountToActuallyDeposit = amountBoatStillNeeds; // A sua lógica!
+
+            // "Escreve de volta" no InputField para o jogador VER a correção
+            amountInput.text = amountToActuallyDeposit.ToString();
+        }
+
+        // 5. A TRANSAÇÃO (USANDO A VARIÁVEL CORRETA!)
+        // Agora tentamos remover a quantidade CORRIGIDA
+        bool success = _playerInventory.RemoveItem(selectedItem, amountToActuallyDeposit);
 
         if (success)
         {
-            // Deu certo! Agora podemos entregar ao barco
-            _boatProgress.AddItemToBoat(selectedItem, amountToDeposit);
-            _dockAudioSource.PlayOneShot(_successAudioClip);
+            // E entregamos a quantidade CORRIGIDA
+            _boatProgress.AddItemToBoat(selectedItem, amountToActuallyDeposit);
+            AudioManager.instance.PlayDepositSound(true);
 
-            PopulateDropdown(); // Atualiza o Dropdown (ex: "Wood (15)")
-            UpdateProgressDisplay(); // Atualiza a Meta (ex: "Madeira: 15 / 50")
+            PopulateDropdown();
+            UpdateProgressDisplay();
         }
         else
         {
-            // O RemoveItem falhou (jogador tentou depositar mais do que tinha)
+            // Isso agora só vai falhar se o jogador tentou dar 5, mas só tinha 3.
             Debug.Log("Falha no depósito. Quantidade insuficiente.");
-            _dockAudioSource.PlayOneShot(_errorAudioClip);
+            AudioManager.instance.PlayDepositSound(false);
         }
     }
 
