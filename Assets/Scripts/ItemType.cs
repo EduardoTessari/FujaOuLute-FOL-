@@ -3,9 +3,12 @@
         Wood,   // Madeira
         Vine,   // Cipó
         Food,   // Comida
-        Water  // Água
+        Water,  // Água
+        Sword,  // Espada
+        Bow,    // Arco
 
-        // Itens de Loot de Combate (para o seu treino de RNG!)
-        //SapoGosma,
-        //SapoVeneno
-    }
+
+    // Itens de Loot de Combate (para o seu treino de RNG!)
+    //SapoGosma,
+    //SapoVeneno
+}

@@ -41,9 +41,9 @@ GameObject:
   m_Component:
   - component: {fileID: 5052690776217825120}
   - component: {fileID: 6688713677919242572}
-  - component: {fileID: 238166242814202674}
+  - component: {fileID: 8962265051218483429}
   m_Layer: 0
-  m_Name: TestSword
+  m_Name: TestStaff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -110,7 +110,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 110
   m_Sprite: {fileID: 21300000, guid: 171aa5986a7a94f4d889b8bec1e52321, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.8980392, g: 0.14117646, b: 0.76055497, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -120,7 +120,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &238166242814202674
+--- !u!114 &8962265051218483429
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -129,11 +129,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 5206443934562995420}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 252611b78a86ae34baf75e470becc880, type: 3}
+  m_Script: {fileID: 11500000, guid: a73bf23ead07a9f4bbf74b3205d16475, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   weaponName: 
-  damage: 1
+  damage: 0
   cooldown: 0.5
-  _projectile: {fileID: 5206443934562995420, guid: c1df79476ab77214cb73d20bbf898634, type: 3}
-  _firePoint: {fileID: 33026424636198475}
+  healingZonePrefab: {fileID: 5693564570641610359, guid: eba0fcca2fdda9f469f3b78e24ea8991, type: 3}

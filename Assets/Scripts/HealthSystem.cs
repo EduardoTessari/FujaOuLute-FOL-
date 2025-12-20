@@ -1,10 +1,14 @@
 using UnityEngine;
+using UnityEngine.Events;
 
 public class HealthSystem : MonoBehaviour
 {
     [Header("Configurações")]
     [SerializeField] private int maxHealth = 5;
     [SerializeField] private int currentHealth;
+
+    [Header("Eventos")]
+    public UnityEvent OnDeath;
 
     private void Start()
     {
@@ -25,7 +29,10 @@ public class HealthSystem : MonoBehaviour
     private void Die()
     {
         Debug.Log($"{gameObject.name} MORREU!");
-        // Futuramente: Game Over ou Respawn
-        // gameObject.SetActive(false); // Desativa por enquanto
+        // Dispara qualquer coisa conectada a este evento (Loot, Som, Partícula)
+        OnDeath?.Invoke();
+
+        // Destrói o objeto (Sapo)
+        Destroy(gameObject);
     }
 }
