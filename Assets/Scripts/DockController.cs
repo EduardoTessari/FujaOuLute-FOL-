@@ -10,7 +10,7 @@ public class DockController : MonoBehaviour
     public BoatProgress boatProgressManager;
 
     // Variáveis privadas
-    private Inventory _playerInventory;
+    private InventoryUI _playerInventory;
     private bool _canDeposit = false;
     [SerializeField] private GameObject _btnToPress; //variavel para a ajuda visual do botao de coleta
 
@@ -21,7 +21,7 @@ public class DockController : MonoBehaviour
         if (collision.CompareTag("Player"))
         {
             // Pega o INVENTÁRIO em vez do CONTROLE
-            _playerInventory = collision.GetComponent<Inventory>();
+            _playerInventory = collision.GetComponent<InventoryUI>();
 
             if (_btnToPress != null)
             {

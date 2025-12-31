@@ -1,21 +1,25 @@
 using UnityEngine;
-using UnityEngine.UI; // Para mexer na Image
-using TMPro;          // Para mexer no Texto
+using UnityEngine.UI;
+using TMPro;
+using UnityEngine.EventSystems; // IMPORTANTE: Necessário para detectar o mouse!
 
-public class InventorySlot : MonoBehaviour
+// Adicionamos as interfaces na linha abaixo
+public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("Componentes da UI")]
     public Image iconImage;
     public TextMeshProUGUI amountText;
 
-    // Essa função vai ser chamada pelo Gerente de UI para preencher os dados
+    // Guardamos o dado aqui para saber o que mostrar no tooltip
+    private ItemData _currentItem;
+
     public void SetupSlot(ItemData itemData, int amount)
     {
-        // 1. Troca a foto
-        iconImage.sprite = itemData.icon;
-        iconImage.enabled = true; // Garante que a imagem apareça
+        _currentItem = itemData; // Guardamos a referência
 
-        // 2. Atualiza o número
+        iconImage.sprite = itemData.icon;
+        iconImage.enabled = true;
+
         if (amount > 1)
         {
             amountText.text = amount.ToString();
@@ -23,9 +27,32 @@ public class InventorySlot : MonoBehaviour
         }
         else
         {
-            // Se for só 1 (tipo espada), esconde o número pra ficar limpo
             amountText.enabled = false;
         }
     }
-}
 
+    public void ClearSlot()
+    {
+        _currentItem = null; // Limpa a referência
+        iconImage.sprite = null;
+        iconImage.enabled = false;
+        amountText.enabled = false;
+    }
+
+    // --- MÁGICA DO MOUSE ---
+
+    // O mouse entrou no quadrado?
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (_currentItem != null)
+        {
+            InventoryTooltip.instance.ShowTooltip(_currentItem);
+        }
+    }
+
+    // O mouse saiu do quadrado?
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        InventoryTooltip.instance.HideTooltip();
+    }
+}

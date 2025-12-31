@@ -1,129 +1,92 @@
-using System.Collections.Generic; // Precisamos disso para Dicionários e Listas!
 using UnityEngine;
-using UnityEngine.UIElements;
+using System.Collections.Generic;
 
-// --- PASSO 1: A "RECEITA" ---
-// Esta é uma pequena "classe auxiliar" que vamos usar.
-// Ela nos permite criar uma "lista de compras" no Inspector.
-[System.Serializable] // Isso faz ela aparecer no Inspector da Unity
+// Classe auxiliar para definir o que o barco precisa
+[System.Serializable]
 public class ItemRequirement
 {
-    public ItemList item;       // O item que precisamos (do nosso "cardápio")
-    public int amountNeeded;  // A quantidade
+    public ItemData item;      // MUDANÇA: Agora arrasta o ScriptableObject aqui!
+    public int amountNeeded;   // Quanto precisa?
 }
 
-
-// --- PASSO 2: O SCRIPT PRINCIPAL ---
 public class BoatProgress : MonoBehaviour
 {
-    public GameObject winPanel, DockProgress; // Painel que aparece quando o barco está completo
-
-    [Header("Receita do Barco")]
-    // Esta é a "lista de compras" que você vai preencher no Inspector!
+    [Header("A Receita do Barco")]
+    // Lista de materiais necessários (Configure no Inspector)
     public List<ItemRequirement> recipe = new List<ItemRequirement>();
 
-    [Header("Progresso Atual")]
-    // O "carrinho de compras" (o que já coletamos), agora é um Dicionário.
-    [SerializeField]
-    private Dictionary<ItemList, int> itemsCollected = new Dictionary<ItemList, int>();
+    // Onde guardamos o que já foi entregue
+    private Dictionary<ItemData, int> collectedItems = new Dictionary<ItemData, int>();
 
-    /**
-     * Esta é a ÚNICA função pública que a Doca vai chamar.
-     * Ela é inteligente: recebe o item, guarda e checa se vencemos.
-     */
-    public void AddItemToBoat(ItemList item, int amount)
+    // --- FUNÇÕES PÚBLICAS (Chamadas pela Doca) ---
+
+    // 1. Recebe o item da Doca
+    public void AddItemToBoat(ItemData item, int amount)
     {
-        if (amount <= 0) return;
-
-        // Adiciona o item ao nosso "carrinho"
-        if (itemsCollected.ContainsKey(item))
+        if (collectedItems.ContainsKey(item))
         {
-            itemsCollected[item] += amount;
+            collectedItems[item] += amount;
         }
         else
         {
-            itemsCollected.Add(item, amount);
+            collectedItems.Add(item, amount);
         }
 
-        Debug.Log($"ENTREGUE AO BARCO: {amount} de {item}! Progresso total: {itemsCollected[item]}");
-
-        // Após cada entrega, checa se já vencemos
-        CheckWinCondition();
+        Debug.Log($"Barco recebeu {amount} de {item.itemName}.");
+        CheckIfComplete(); // Verifica se terminou o barco
     }
 
-    // Uma função pública para obter o progresso atual (útil para UI)
-    public Dictionary<ItemList, int> GetCollectedItems()
+    // 2. Diz para a Doca quanto ainda falta de um item específico
+    public int GetAmountNeeded(ItemData item)
     {
-        return itemsCollected;
-    }
-
-    /**
-     * Uma função privada que checa se a "lista de compras" bate com o "carrinho".
-     */
-    private void CheckWinCondition()
-    {
-        // Vamos checar CADA item da nossa receita
-        foreach (ItemRequirement req in recipe)
-        {
-            // 1. Checa se já coletamos este item alguma vez
-            if (!itemsCollected.ContainsKey(req.item))
-            {
-                // Se o item nem está no dicionário, ainda não vencemos.
-                return;
-            }
-
-            // 2. Checa se a quantidade que coletamos é o suficiente
-            if (itemsCollected[req.item] < req.amountNeeded)
-            {
-                // Se a quantidade for menor, ainda não vencemos.
-                return;
-            }
-        }
-
-        if (winPanel != null)
-        {
-            if (DockProgress != null)
-            {
-                DockProgress.SetActive(false); // DESLIGA A TELA DE PROGRESSO DO BARCO
-            }
-
-            winPanel.SetActive(true); // LIGA A TELA DE VITÓRIA
-        }
-
-        // AQUI SIM NÓS PAUSAMOS O JOGO!
-        Time.timeScale = 0f; // O jogo acabou, pode pausar.
-
-
-        // Se o loop terminou e não saímos em nenhum "return"…
-        // ...significa que temos TODOS os itens na quantidade certa!
-        Debug.LogWarning("BARCO CONSTRUÍDO! TODOS OS RECURSOS COLETADOS! VENCEU!");
-        
-    }
-
-    public int GetAmountNeeded(ItemList item)
-    {
-        int needed = 0;
-        int collected = 0;
-
-        // 1. Encontra o total necessário na "receita"
-        foreach (ItemRequirement req in recipe)
+        // Procura o item na receita
+        foreach (var req in recipe)
         {
             if (req.item == item)
             {
-                needed = req.amountNeeded;
-                break; // Achamos o item, podemos parar o loop
+                int currentAmount = 0;
+                if (collectedItems.ContainsKey(item))
+                {
+                    currentAmount = collectedItems[item];
+                }
+
+                int missing = req.amountNeeded - currentAmount;
+                return Mathf.Max(0, missing); // Retorna 0 se já tiver passado do total
+            }
+        }
+        return 0; // Se o item não está na receita, precisa de 0.
+    }
+
+    // 3. Retorna tudo que já foi coletado (para a Doca mostrar na lista)
+    public Dictionary<ItemData, int> GetCollectedItems()
+    {
+        return collectedItems;
+    }
+
+    // --- VERIFICAÇÃO FINAL ---
+    private void CheckIfComplete()
+    {
+        bool allComplete = true;
+
+        foreach (var req in recipe)
+        {
+            int current = 0;
+            if (collectedItems.ContainsKey(req.item))
+            {
+                current = collectedItems[req.item];
+            }
+
+            if (current < req.amountNeeded)
+            {
+                allComplete = false;
+                break;
             }
         }
 
-        // 2. Encontra o total que já coletamos
-        // (Precisamos da sua função "getter" aqui!)
-        if (itemsCollected.ContainsKey(item))
+        if (allComplete)
         {
-            collected = itemsCollected[item];
+            Debug.Log("PARABÉNS! O BARCO ESTÁ PRONTO!");
+            // Aqui você chamaria o GameManager para vencer o jogo ou tocar uma cutscene
         }
-
-        // 3. Retorna a diferença (quanto falta)
-        // O Mathf.Max garante que nunca vamos retornar um número negativo
-        return Mathf.Max(0, needed - collected);
     }
 }
