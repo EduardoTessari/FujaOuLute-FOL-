@@ -27685,7 +27685,7 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: 5017867e60a578d4a8f861e8823d12fd, type: 2}
     amountNeeded: 3
   - item: {fileID: 11400000, guid: 8575758b14e0e82489b245e2fc2829f8, type: 2}
-    amountNeeded: 25
+    amountNeeded: 30
 --- !u!4 &2138232646
 Transform:
   m_ObjectHideFlags: 0
