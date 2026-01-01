@@ -1,36 +1,104 @@
+using System.Collections.Generic;
 using UnityEngine;
-using System.Collections.Generic; // Necessário para usar LISTAS
+using static UnityEditor.PlayerSettings;
+using static UnityEditor.Timeline.Actions.MenuPriority;
 
 public class InventoryUI : MonoBehaviour
 {
-    // O Singleton (Para facilitar o acesso de qualquer lugar)
-    public static InventoryUI instance;
+    [SerializeField] GameObject UIGameObject;
 
-    [Header("Referências")]
-    public Transform gridContainer;  // Onde os slots vão nascer (o objeto com Grid Layout Group)
-    public GameObject slotPrefab;    // O molde do slot que criamos
+    [Header("Configuração Visual")]
+    public GameObject slotPrefab;   // Arraste o prefab do botãozinho aqui
+    public Transform slotsParent;   // Arraste o Grid/Content aqui
 
-    private void Awake()
+    [Header("Seus Itens (Dados)")]
+    // Agora os dados moram aqui!
+    public List<ListItem> inventoryItems = new List<ListItem>();
+
+    // --- 1. A FUNÇÃO QUE O COLLECTITEM ESTÁ PROCURANDO ---
+    public void AddItem(ItemData data, int amount)
     {
-        instance = this;
+        // Verifica se já tem o item
+        ListItem itemExistente = null;
+        foreach (ListItem item in inventoryItems)
+        {
+            if (item.data == data)
+            {
+                itemExistente = item;
+                break;
+            }
+        }
+
+        // Soma ou Cria novo
+        if (itemExistente != null)
+        {
+            itemExistente.stackSize += amount;
+            Debug.Log($"InventoryUI: Somou +{amount} de {data.itemName}");
+        }
+        else
+        {
+            inventoryItems.Add(new ListItem(data, amount));
+            Debug.Log($"InventoryUI: Novo item {data.itemName}");
+        }
+
+        UpdateDisplay(); // Atualiza a tela
     }
 
-    // Essa é a função que vamos chamar toda vez que o inventário mudar
-    public void UpdateDisplay(List<ListItem> inventoryList)
+    // --- 2. A FUNÇÃO QUE A DOCA/CRAFTING VAI PRECISAR ---
+    public bool RemoveItem(ItemData data, int amount)
     {
-        // 1. Limpeza: Destroi todos os slots antigos para não duplicar
-        foreach (Transform child in gridContainer)
+        ListItem itemEncontrado = null;
+        foreach (var item in inventoryItems)
+        {
+            if (item.data == data)
+            {
+                itemEncontrado = item;
+                break;
+            }
+        }
+
+        if (itemEncontrado != null && itemEncontrado.stackSize >= amount)
+        {
+            itemEncontrado.stackSize -= amount;
+
+            if (itemEncontrado.stackSize <= 0)
+            {
+                inventoryItems.Remove(itemEncontrado);
+            }
+
+            UpdateDisplay();
+            return true;
+        }
+        return false;
+    }
+
+    // --- 3. A FUNÇÃO DE CONSULTA (Pra Doca saber o que você tem) ---
+    public int GetItemCount(ItemData data)
+    {
+        foreach (ListItem item in inventoryItems)
+        {
+            if (item.data == data)
+            {
+                return item.stackSize;
+            }
+        }
+        return 0;
+    }
+
+    // --- 4. A ATUALIZAÇÃO VISUAL (Que ele já fazia antes) ---
+    public void UpdateDisplay()
+    {
+        // Limpa slots antigos
+        foreach (Transform child in slotsParent)
         {
             Destroy(child.gameObject);
         }
 
-        // 2. Criação: Para cada item na lista do jogador...
-        foreach (ListItem item in inventoryList)
+        // Cria slots novos baseados na lista DESTE script
+        foreach (ListItem item in inventoryItems)
         {
-            // Cria o slot dentro do Grid
-            GameObject newSlot = Instantiate(slotPrefab, gridContainer);
+            GameObject newSlot = Instantiate(slotPrefab, slotsParent);
 
-            // Pega o script do slot e preenche os dados
             InventorySlot slotScript = newSlot.GetComponent<InventorySlot>();
             if (slotScript != null)
             {
@@ -38,17 +106,22 @@ public class InventoryUI : MonoBehaviour
             }
         }
     }
+
+    public void OpenInventoryUI()
+    {
+        // "Defina o ativo como: O CONTRÁRIO de como ele está agora"
+        UIGameObject.SetActive(!UIGameObject.activeSelf);
+    }
+
 }
 
-// --- CLASSE AUXILIAR (Pode ficar aqui mesmo) ---
-// Essa classe representa "O que tem no bolso do jogador"
-[System.Serializable] // Isso faz aparecer no Inspector pra gente testar!
+// --- CLASSE DE DADOS (Agora mora aqui) ---
+[System.Serializable]
 public class ListItem
 {
-    public ItemData data;   // Qual é o item (Madeira, Espada...)
-    public int stackSize;   // Quantos tem (1, 10, 99...)
+    public ItemData data;
+    public int stackSize;
 
-    // Construtor rápido
     public ListItem(ItemData d, int q)
     {
         data = d;

@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4811390744453468570}
-  - component: {fileID: 2284301311703610524}
+  - component: {fileID: 8924803687043257328}
   m_Layer: 0
   m_Name: TreeCollider
   m_TagString: Untagged
@@ -26,13 +26,13 @@ Transform:
   m_GameObject: {fileID: 580437147924659487}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.25, y: -1.4, z: 0}
+  m_LocalPosition: {x: -0.019, y: -0.701, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1110394340297393376}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!61 &2284301311703610524
+--- !u!61 &8924803687043257328
 BoxCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -66,7 +66,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.041101456, y: -0.32470727}
+  m_Offset: {x: 0.0032987595, y: 0.013194561}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -76,7 +76,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.95889854, y: 0.5560918}
+  m_Size: {x: 0.71631813, y: 0.393054}
   m_EdgeRadius: 0
 --- !u!1 &875466571719229633
 GameObject:
@@ -88,9 +88,9 @@ GameObject:
   m_Component:
   - component: {fileID: 1110394340297393376}
   - component: {fileID: 5250737523530897383}
-  - component: {fileID: 734492120871175635}
   - component: {fileID: 8670073082289625546}
   - component: {fileID: 5132376597998878587}
+  - component: {fileID: 4217277162445613020}
   m_Layer: 0
   m_Name: Tree
   m_TagString: Untagged
@@ -159,7 +159,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 2
-  m_Sprite: {fileID: -231948628125939053, guid: 848933a35b02fde4fb71fbfaf89f2551, type: 3}
+  m_Sprite: {fileID: 8785618894833809297, guid: dc2cff23727bd3141934054fe94a2020, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -170,7 +170,36 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!61 &734492120871175635
+--- !u!114 &8670073082289625546
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 875466571719229633}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4de0f5a28ccc9194cb8e4528de694ab1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _collectTime: 15
+  _bonusTime: 6
+  itemToGive: {fileID: 11400000, guid: c7f6e6f1c0cd96e4d861eca73bb72c48, type: 2}
+  amountToGive: 15
+--- !u!114 &5132376597998878587
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 875466571719229633}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d92ba2e4828a06849a65e0bce3ffa356, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isBarInside: 0
+--- !u!61 &4217277162445613020
 BoxCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -204,49 +233,18 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.32978678, y: -1.4753642}
+  m_Offset: {x: 0.058521748, y: -0.7152729}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 2.76, y: 4.51}
+    oldSize: {x: 1.31, y: 2.38}
     newSize: {x: 2.76, y: 4.51}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1.3367081, y: 1.5592718}
+  m_Size: {x: 2.779561, y: 1.5736923}
   m_EdgeRadius: 0
---- !u!114 &8670073082289625546
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 875466571719229633}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4de0f5a28ccc9194cb8e4528de694ab1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _collectTime: 15
-  _bonusTime: 6
-  itemToGive: 0
-  amountToGive: 1
-  _treeAudioSource: {fileID: 0}
-  _collectAudioClip: {fileID: 8300000, guid: 91f90eb5a9497284a882bbaf844d84a4, type: 3}
---- !u!114 &5132376597998878587
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 875466571719229633}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d92ba2e4828a06849a65e0bce3ffa356, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isBarInside: 0
 --- !u!1001 &8228040839185974859
 PrefabInstance:
   m_ObjectHideFlags: 0

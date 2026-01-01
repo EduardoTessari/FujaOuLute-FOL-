@@ -289,12 +289,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   possibleLoot:
-  - item: 2
+  - item: {fileID: 11400000, guid: c7f6e6f1c0cd96e4d861eca73bb72c48, type: 2}
     amount: 10
     dropChance: 100
-  - item: 3
+  - item: {fileID: 11400000, guid: 8575758b14e0e82489b245e2fc2829f8, type: 2}
     amount: 15
     dropChance: 50
-  - item: 1
+  - item: {fileID: 11400000, guid: 5017867e60a578d4a8f861e8823d12fd, type: 2}
     amount: 2
     dropChance: 25

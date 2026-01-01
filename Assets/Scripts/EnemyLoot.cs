@@ -4,8 +4,8 @@ using System.Collections.Generic;
 [System.Serializable]
 public class LootTableItem
 {
-    public ItemList item;       // Qual item? (Carne, Veneno)
-    public int amount = 1;      // Quantos?
+    public ItemData item;       // MUDOU: Agora arrasta o ScriptableObject aqui
+    public int amount = 1;      // Quantos cai?
     [Range(0, 100)]
     public float dropChance = 100f; // Chance em %
 }
@@ -18,29 +18,31 @@ public class EnemyLoot : MonoBehaviour
     // Função que será chamada quando o bicho morrer
     public void DropLoot()
     {
-        // 1. Encontra o Jogador (precisamos do inventário dele)
-        // (Como o loot é "mágico" e vai direto pra mochila, precisamos achar a mochila)
-        Inventory playerInventory = FindFirstObjectByType<Inventory>();
+        // 1. Encontra o Jogador
+        // (Nota: Se sua versão da Unity for antiga e reclamar do FindFirstObjectByType, use FindObjectOfType)
+        InventoryUI playerInventory = FindFirstObjectByType<InventoryUI>();
 
-        if (playerInventory == null) return;
+        if (playerInventory == null)
+        {
+            Debug.LogWarning("EnemyLoot: Não achou o inventário do jogador!");
+            return;
+        }
 
         // 2. Roda a roleta para CADA item da lista
         foreach (LootTableItem loot in possibleLoot)
         {
-            // Gera um número aleatório entre 0 e 100
+            // Segurança: se esqueceu de arrastar o item no Inspector, pula
+            if (loot.item == null) continue;
+
             float roll = Random.Range(0f, 100f);
-            Debug.Log($"Rolou {roll} para {loot.item} com chance de {loot.dropChance}%");
 
             // Se o número for menor que a chance, GANHOU!
-            // Ex: Chance 25%. Se cair 10, ganhou. Se cair 50, perdeu.
             if (roll <= loot.dropChance)
             {
+                // Agora essa função funciona pois o AddItem espera (ItemData, int)
                 playerInventory.AddItem(loot.item, loot.amount);
-                
-                Debug.Log($"SORTE! Dropou: {loot.item}");
-                
 
-                // (Futuro: Aqui chamaremos o Texto Flutuante)
+                Debug.Log($"SORTE! Dropou: {loot.item.itemName}");
             }
         }
     }

@@ -8,25 +8,20 @@ public class CollectItem : MonoBehaviour
     [SerializeField] float _bonusTime = 6f;
 
     [Header("Configuração do Item")]
-    public ItemList itemToGive;
+    // MUDANÇA AQUI: Agora usamos o ScriptableObject, não mais o Enum
+    public ItemData itemToGive;
     public int amountToGive = 1;
-
 
     // Variáveis Privadas
     private bool _canCollect = false;
-    private PLayerControler _playerInRange = null;
+    private PLayerControler _playerInRange = null; // Verifique se é PLayerControler ou PlayerController no seu projeto
     private Coroutine _collectCoroutine;
-
-    // --- CORREÇÃO DO BUG CS0103 ---
-    // Promovemos o _elapsedTime para ser uma variável da classe
     private float _elapsedTime;
-    // ----------------------------
 
     private void Awake()
     {
     }
 
-    // --- CORREÇÃO DE LÓGICA NO TRIGGER EXIT ---
     private void OnTriggerExit2D(Collider2D collision)
     {
         if (collision.CompareTag("Player"))
@@ -39,24 +34,16 @@ public class CollectItem : MonoBehaviour
             {
                 StopCoroutine(_collectCoroutine);
                 UIManager.instance.ShowProgressBar(false);
-
-                // --- CORREÇÃO DO BUG DE ARQUITETURA ---
-                // O "Chefe" (CollectItem) não deve desligar a UI
-                // UIManager.instance.skillCheckGroup.SetActive(false); // DELETADO
-                // Em vez disso, ele AVISA o UIManager
                 UIManager.instance.HideSkillCheckUI();
-                // ------------------------------------
             }
         }
     }
-    // --- FIM DA CORREÇÃO ---
-
-    // (OnTriggerEnter e Update continuam iguais)
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Player"))
         {
+            // Cuidado aqui: garanta que o nome do script é PLayerControler mesmo (com L maiúsculo)
             _playerInRange = collision.GetComponent<PLayerControler>();
             UIManager.instance.ShowInteractPrompt(true);
             _canCollect = true;
@@ -78,7 +65,9 @@ public class CollectItem : MonoBehaviour
         UIManager.instance.ShowProgressBar(true);
         _elapsedTime = 0f;
 
-        AudioManager.instance.PlayCollectingLoop(itemToGive);
+        // --- ATENÇÃO: Comentei o áudio temporariamente para não dar erro ---
+        // AudioManager.instance.PlayCollectingLoop(itemToGive); 
+        // ------------------------------------------------------------------
 
         Coroutine skillCheckCoroutine = StartCoroutine(UIManager.instance.DoSkillCheckProcess(this));
 
@@ -89,12 +78,9 @@ public class CollectItem : MonoBehaviour
                 // Cancelamento por movimento
                 UIManager.instance.ShowProgressBar(false);
                 StopCoroutine(skillCheckCoroutine);
-
-                // --- CORREÇÃO DO BUG DE ARQUITETURA ---
                 UIManager.instance.HideSkillCheckUI();
-                // ------------------------------------
 
-                AudioManager.instance.StopCollectingLoop();
+                // AudioManager.instance.StopCollectingLoop(); // Comentado temporariamente
                 _canCollect = true;
                 _collectCoroutine = null;
                 yield break;
@@ -107,18 +93,19 @@ public class CollectItem : MonoBehaviour
 
         // SUCESSO!
         AudioManager.instance.PlayDepositSound(true);
-        AudioManager.instance.StopCollectingLoop();
-
+        AudioManager.instance.StopCollectingLoop();  
+        
         StopCoroutine(skillCheckCoroutine);
         UIManager.instance.ShowProgressBar(false);
-        UIManager.instance.HideSkillCheckUI(); // Garante que a UI suma
+        UIManager.instance.HideSkillCheckUI();
 
-        _playerInRange.GetComponent<Inventory>().AddItem(itemToGive, amountToGive);
+        // MUDANÇA CRUCIAL: Agora o AddItem recebe o ItemData corretamente!
+        _playerInRange.GetComponent<InventoryUI>().AddItem(itemToGive, amountToGive);
+
         Destroy(gameObject);
         _collectCoroutine = null;
     }
 
-    // Esta função agora funciona, pois _elapsedTime é da classe!
     public void ApplySkillCheckBonus()
     {
         _elapsedTime += _bonusTime;

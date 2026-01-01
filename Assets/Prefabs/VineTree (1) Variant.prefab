@@ -66,8 +66,8 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8670073082289625546, guid: 99103474097a8d644b04d36f65ea7b38, type: 3}
       propertyPath: itemToGive
-      value: 1
-      objectReference: {fileID: 0}
+      value: 
+      objectReference: {fileID: 11400000, guid: 5017867e60a578d4a8f861e8823d12fd, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
