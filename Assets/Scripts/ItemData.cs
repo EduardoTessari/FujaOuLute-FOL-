@@ -7,6 +7,8 @@ public class ItemData : ScriptableObject // <-- Note que NÃO é MonoBehaviour!
     [Header("Identidade")]
     public string itemName;      // Nome bonito (ex: "Madeira de Carvalho")
     public ItemList itemType;    // O link com seu Enum (ex: ItemList.Wood)
+    public GameObject prefab;    // se o item tiver um prefab associado (ex: para colocar no mundo)
+
 
     [Header("Visual")]
     public Sprite icon;          // A foto que vai aparecer no inventário
