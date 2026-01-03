@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemName: Espada
   itemType: 4
+  prefab: {fileID: 5206443934562995420, guid: 843b3476977c83d4e826af612f5e4d94, type: 3}
   icon: {fileID: 8975557439242265801, guid: 38c4ad35914463740acf96edb3eb1911, type: 3}
   description: Espada basica forjada das mais resistentes madeias
   isStackable: 1

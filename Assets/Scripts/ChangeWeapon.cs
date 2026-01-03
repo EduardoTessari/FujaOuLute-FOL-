@@ -7,6 +7,7 @@ public class ChangeWeapon : MonoBehaviour
     [Header("Referências Visuais")]
     [SerializeField] GameObject _weaponPosition; // A Mão (WL)
     [SerializeField] GameObject[] newWeapon; // Seus Prefabs (Arco, Espada)
+    [SerializeField] ItemData weaponData; // Dados da arma para o inventário
 
     [Header("Referência Lógica")]
     // --- NOVO: Precisamos saber QUEM é o Player para avisar ele ---
@@ -14,36 +15,56 @@ public class ChangeWeapon : MonoBehaviour
 
     // (Não precisa de Awake ou bool _hasWeapon por enquanto)
 
-    public void ChangeWeaponCondicion()
+    public void AddToInventory()
     {
-      
-        // 1. LIMPEZA (O Faxineiro)
-        // Se já tem alguma coisa na mão, destrói tudo antes de criar a nova
-        if (_weaponPosition.transform.childCount > 0)
+               // Adiciona a arma ao inventário
+        InventoryUI inventory = FindAnyObjectByType<InventoryUI>();
+        if (inventory != null && newWeapon[0] != null)
         {
-            foreach (Transform child in _weaponPosition.transform)
+            if (weaponData != null)
             {
-                Destroy(child.gameObject);
+                inventory.AddItem(weaponData, 1);
+                Debug.Log($"Arma {weaponData.itemName} adicionada ao inventário.");
+            }
+            else
+            {
+                Debug.LogError("ERRO: O prefab da arma não tem WeaponPickup ou ItemData!");
             }
         }
+        else
+        {
+            Debug.LogError("ERRO: InventoryUI não encontrado ou nova arma não atribuída!");
+        }
+    }
 
-        // 2. NASCIMENTO (O que você já tinha, mas simplificado)
-        // Instancia como FILHO da mão direto.
-        GameObject novaArmaObj = Instantiate(newWeapon[0], _weaponPosition.transform.position, newWeapon[0].transform.rotation, _weaponPosition.transform);
+    public void EquipWeaponFromInventory(ItemData itemRecebido)
+    {
+        // Validação básica
+        if (itemRecebido == null || itemRecebido.prefab == null)
+        {
+            Debug.LogError("Tentou equipar item inválido ou sem prefab!");
+            return;
+        }
 
-        // 3. O CASAMENTO (A Conexão Lógica)
-        // Pega o script 'BowWeapon' (que é um WeaponBase) de dentro do objeto novo
+        // 1. LIMPEZA (Mesma lógica)
+        if (_weaponPosition.transform.childCount > 0)
+        {
+            foreach (Transform child in _weaponPosition.transform) Destroy(child.gameObject);
+        }
+
+        // 2. NASCIMENTO (Usa o itemRecebido como fonte)
+        GameObject novaArmaObj = Instantiate(itemRecebido.prefab, _weaponPosition.transform.position, _weaponPosition.transform.rotation, _weaponPosition.transform);
+
+        novaArmaObj.transform.localPosition = Vector3.zero;
+        novaArmaObj.transform.localRotation = Quaternion.identity;
+
+        // 3. CASAMENTO
         WeaponBase scriptDaArma = novaArmaObj.GetComponent<WeaponBase>();
 
         if (_playerCombat != null && scriptDaArma != null)
         {
-            // Avisa o Player: "Toma, essa é sua nova arma atual"
             _playerCombat.currentWeapon = scriptDaArma;
-            Debug.Log($"Arma trocada! Agora é: {scriptDaArma.weaponName}");
-        }
-        else
-        {
-            Debug.LogError("ERRO: Faltou arrastar o PlayerCombat no Inspector ou a Arma não tem script!");
+            Debug.Log($"[INVENTÁRIO] Equipado: {scriptDaArma.weaponName}");
         }
     }
 }
