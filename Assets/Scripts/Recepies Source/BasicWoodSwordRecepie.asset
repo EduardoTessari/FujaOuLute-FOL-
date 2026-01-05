@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9188adc4a94997b4eadddfa38bbb80f3, type: 3}
+  m_Name: BasicWoodSwordRecepie
+  m_EditorClassIdentifier: 
+  nomeDaReceita: Espada de Madeira Basica
+  ingredientesNecessarios:
+  - item: {fileID: 11400000, guid: 332088b36b0c49946ae531e368b79ba8, type: 2}
+    quantidade: 6
+  itemResultado: {fileID: 11400000, guid: 46d8eae00e4b36540b7a8d7a95cb5a11, type: 2}
+  quantidadeResultado: 1

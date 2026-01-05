@@ -3,7 +3,6 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine.EventSystems;
 
-// 1. ADICIONEI O "IPointerClickHandler" AQUI NA LISTA DE INTERFACES
 public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
     [Header("Componentes da UI")]
@@ -11,14 +10,18 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     public TextMeshProUGUI amountText;
 
     private ItemData _currentItem;
+    private bool _isInteractable = true; // NOVA VARIÁVEL DE CONTROLE
 
+    // --- MODO 1: USADO NO INVENTÁRIO (NORMAL) ---
     public void SetupSlot(ItemData itemData, int amount)
     {
         _currentItem = itemData;
+        _isInteractable = true; // Permite clicar e abrir menu
 
         iconImage.sprite = itemData.icon;
         iconImage.enabled = true;
 
+        // Lógica original: esconde número 1
         if (amount > 1)
         {
             amountText.text = amount.ToString();
@@ -30,9 +33,27 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         }
     }
 
+    // --- MODO 2: USADO NO CRAFT (NOVO) ---
+    public void SetupForCrafting(ItemData itemData, int amount)
+    {
+        _currentItem = itemData;
+        _isInteractable = false; // TRAVA O CLIQUE (Não abre menu de ação)
+
+        if (itemData != null)
+        {
+            iconImage.sprite = itemData.icon;
+            iconImage.enabled = true;
+        }
+
+        // Em receitas, é legal mostrar o número mesmo se for 1 (Ex: precisa de "1")
+        amountText.text = amount.ToString();
+        amountText.enabled = true;
+    }
+
     public void ClearSlot()
     {
         _currentItem = null;
+        _isInteractable = true;
         iconImage.sprite = null;
         iconImage.enabled = false;
         amountText.enabled = false;
@@ -44,6 +65,7 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     {
         if (_currentItem != null)
         {
+            // O Tooltip continua funcionando no Craft (é bom pra ver o nome do item)
             InventoryTooltip.instance.ShowTooltip(_currentItem);
         }
     }
@@ -53,16 +75,14 @@ public class InventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         InventoryTooltip.instance.HideTooltip();
     }
 
-    // 2. AQUI ESTÁ A NOVA MÁGICA DO CLIQUE
     public void OnPointerClick(PointerEventData eventData)
     {
-        // Só faz algo se tiver item no slot
+        // NOVA TRAVA DE SEGURANÇA
+        if (!_isInteractable) return;
+
         if (_currentItem != null)
         {
-            // A Regra de Ouro: Fecha o Tooltip imediatamente pra não atrapalhar
             InventoryTooltip.instance.HideTooltip();
-
-            // Chama o Menu de Ação passando o Item e a Posição do Slot
             Debug.Log("Abrindo menu para: " + _currentItem.itemName);
             ItemActionMenu.Instance.OpenMenu(_currentItem, transform.position);
         }
